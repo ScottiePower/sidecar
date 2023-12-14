@@ -23,7 +23,7 @@ WORKDIR /
 
 COPY --from=build-stage /sidecar /sidecar
 
-EXPOSE 8080
+EXPOSE 8071
 
 USER nonroot:nonroot
 
