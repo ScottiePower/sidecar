@@ -8,5 +8,5 @@ Docker files where created based off reference examples from
 The multistage docker file will create a compact image, since the go tool chain will not be included. 
 
 - docker build -t zimmy71/sidecar:latest -f Dockerfile.multistage .
-- docker push zimmy71/sidecar:latest
 - docker run --publish 8071:8071 zimmy71/sidecar:latest
+- docker push zimmy71/sidecar:latest

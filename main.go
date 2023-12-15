@@ -46,6 +46,7 @@ func validateRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
     // Send back post data
+	log.Printf("Sending back data %s", string(data))
 
 	// Send back json response
 	resp := map[string]interface{}{
