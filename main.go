@@ -19,6 +19,7 @@ func main() {
 	// Define handlers for endpoints
 	r := mux.NewRouter()
 	r.HandleFunc("/validate", validateRequest).Methods("POST")
+	log.Printf("Http Method: POST, Endpoint: /validate")
 	// Create http server
 	http.Handle("/", r)
 	log.Printf("Listener started on port %d", Port)
