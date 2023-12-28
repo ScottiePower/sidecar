@@ -1,13 +1,15 @@
 package main
 
 import (
-    "fmt"
-    "net/http"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/heptiolabs/healthcheck"
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"strconv"
 )
 
 type ValidationRequest struct {
@@ -15,21 +17,33 @@ type ValidationRequest struct {
 }
 
 const (
-	RequestMaxsize     = 10 * (1 << 20) // 10MB
-	Port               = 8071
+	RequestMaxsize = 10 * (1 << 20) // 10MB
+	Port           = "8071"
 )
 
 func main() {
+	health := healthcheck.NewHandler()
+	// Our app is not happy if we've got more than 100 goroutines running.
+	health.AddLivenessCheck("Liveness", healthcheck.GoroutineCountCheck(100))
+	health.AddReadinessCheck("Readiness", healthcheck.GoroutineCountCheck(100))
+
 	// Define handlers for endpoints
 	r := mux.NewRouter()
-	r.HandleFunc("/policy/v0/policies/rego/validate", validateRequestJSON).Methods("POST")
+	r.HandleFunc("/live", health.LiveEndpoint)
+	r.HandleFunc("/ready", health.ReadyEndpoint)
+	r.HandleFunc("/validate", validateRequestJSON).Methods("POST")
 
 	// Create http server
 	http.Handle("/", r)
-	log.Printf("Listener started on port %d", Port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", Port), nil); err != nil {
+	port, err := strconv.Atoi(Port)
+	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Listener started on port %d", port)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 func validateRequestJSON(w http.ResponseWriter, r *http.Request) {
@@ -83,4 +97,3 @@ func sendValidationResponse(w http.ResponseWriter, isValid bool, errMsg string) 
 func CloseRequestBody(r *http.Request) {
 	_ = r.Body.Close()
 }
-

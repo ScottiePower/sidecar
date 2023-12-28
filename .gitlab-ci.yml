@@ -1,0 +1,43 @@
+default:
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login --username $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: never
+    - when: always
+
+stages:
+  - build
+
+variables:
+  # Use TLS https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_TLS_VERIFY: 1
+  DOCKER_CERT_PATH: "/certs/client"
+  DH_REGISTRY: $CI_REGISTRY_USER/$CI_PROJECT_NAME
+
+build:
+  stage: build
+  script:
+    - VERSION="$(date +"%Y%m%d.%H%M%S")"
+    - DH_CONTAINER_RELEASE_IMAGE="$DH_REGISTRY:$VERSION"
+    - echo "VERSION $VERSION"
+    - echo "DH_CONTAINER_RELEASE_IMAGE $DH_CONTAINER_RELEASE_IMAGE"
+    - docker build -t $DH_CONTAINER_RELEASE_IMAGE . --quiet
+    - docker push $DH_CONTAINER_RELEASE_IMAGE --quiet
+
+#build-go:
+#  stage: build
+#  image: goreleaser/goreleaser
+#  script:
+#    - goreleaser release -f ./.goreleaser.yaml --snapshot
+#  artifacts:
+#    paths:
+#      - dist/
+#    expire_in: 1 week

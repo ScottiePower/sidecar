@@ -1,0 +1,29 @@
+project_name: sidecar
+gitlab_urls:
+  api: https://gitlab.rocketman71.sidecar.io/api/v4
+  download: https://gitlab.rocketman71.sidecar.io
+  skip_tls_verify: false
+  use_package_registry: false
+env:
+  - GITLAB_TOKEN={{ .Env.GITLAB_TOKEN }}
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.Port={{ .Env.PORT }}
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
